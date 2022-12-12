@@ -1,0 +1,14 @@
+name: Home_Price_Shiny
+title: Home_Price_Shiny
+username:
+account: x0s00e-danny-chang
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7864906
+bundleId: 6624605
+url: https://x0s00e-danny-chang.shinyapps.io/Home_Price_Shiny/
+when: 1670803302.80517
+lastSyncTime: 1670803302.80518
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: backwardmodel_predictions.csv|custommodel_predictions.csv|datasets/.DS_Store|datasets/data_description.txt|datasets/sample_submission.csv|datasets/test.csv|forwardmodel_predictions.csv|Stats Project Edited.Rmd|Stats-Project-Edited.html|stepwisemodel_predictions.csv

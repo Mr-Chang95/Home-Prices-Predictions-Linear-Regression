@@ -1,0 +1,225 @@
+---
+title: "Case Study(Housing Sale Prices)"
+author: "Daniel Chang and Garrett Drake"
+date: "2022-12-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Import Packages and Data
+
+```{r load libraries}
+library(tidyverse)
+library(olsrr)
+library(regclass)
+library(fastDummies)
+library(dplyr)
+
+test = read.csv("datasets/test.csv", sep = ",", header = TRUE)
+train = read.csv("datasets/train.csv", sep = ",", header = TRUE)
+```
+
+## Clean Data
+
+```{r clean data}
+# replace null values with null values in train dataset
+train$PoolQC[is.na(train$PoolQC)] = "None"
+train$MiscFeature[is.na(train$MiscFeature)] = "None"
+train$Alley[is.na(train$Alley)] = "None"
+train$Fence[is.na(train$Fence)] = "None"
+train$FireplaceQu[is.na(train$FireplaceQu)] = "None"
+train$GarageType[is.na(train$GarageType)] = "None"
+train$GarageFinish[is.na(train$GarageFinish)] = "None"
+train$GarageQual[is.na(train$GarageQual)] = "None"
+train$GarageCond[is.na(train$GarageCond)] = "None"
+train$BsmtExposure[is.na(train$BsmtExposure)] = "None"
+train$BsmtCond[is.na(train$BsmtCond)] = "None"
+train$BsmtQual[is.na(train$BsmtQual)] = "None"
+train$BsmtFinType1[is.na(train$BsmtFinType1)] = "None"
+train$BsmtFinType2[is.na(train$BsmtFinType2)] = "None"
+train$MSZoning[is.na(train$MSZoning)] = "None"
+train$MasVnrArea[is.na(train$MasVnrArea)] = 0
+train$LotFrontage[is.na(train$LotFrontage)] = 0
+train$MasVnrType[is.na(train$MasVnrType)] = "None"
+train$Electrical[is.na(train$Electrical)] = "None"
+
+# rename colmnns to make it match with ones in test dataset
+colnames(train)[44] <- "FirstFlrSF"
+colnames(train)[45] <- "SecondFlrSF"
+
+train$logSalePrice = log(train$SalePrice)
+
+# remove outliers
+train=train[!train$Id %in% c(524,643,725,1299,1424),]
+
+# replace null values with null values in test dataset
+test = test[,-c(60)]
+test$PoolQC[is.na(test$PoolQC)] = "None"
+test$MiscFeature[is.na(test$MiscFeature)] = "None"
+test$Alley[is.na(test$Alley)] = "None"
+test$Fence[is.na(test$Fence)] = "None"
+test$FireplaceQu[is.na(test$FireplaceQu)] = "None"
+test$GarageType[is.na(test$GarageType)] = "None"
+test$GarageFinish[is.na(test$GarageFinish)] = "None"
+test$GarageQual[is.na(test$GarageQual)] = "None"
+test$GarageCond[is.na(test$GarageCond)] = "None"
+test$BsmtExposure[is.na(test$BsmtExposure)] = "None"
+test$BsmtCond[is.na(test$BsmtCond)] = "None"
+test$BsmtQual[is.na(test$BsmtQual)] = "None"
+test$BsmtFinType1[is.na(test$BsmtFinType1)] = "None"
+test$BsmtFinType2[is.na(test$BsmtFinType2)] = "None"
+test$MSZoning[is.na(test$MSZoning)] = "None"
+test$SaleType[is.na(test$SaleType)] = "None"
+test$BsmtFinSF2[is.na(test$SaleType)] = 0
+test$BsmtUnfSF[is.na(test$BsmtUnfSF)] = 0
+test$GarageArea[is.na(test$GarageArea)] = 0
+test$GarageCars[is.na(test$GarageCars)] = 0
+test$BsmtFinSF1[is.na(test$BsmtFinSF1)] = 0
+test$BsmtFinSF2[is.na(test$BsmtFinSF2)] = 0
+test$MasVnrArea[is.na(test$MasVnrArea)] = 0
+test$LotFrontage[is.na(test$LotFrontage)] = 0
+test$TotalBsmtSF[is.na(test$TotalBsmtSF)] = 0
+test$BsmtFullBath[is.na(test$BsmtFullBath)] = 0
+test$BsmtHalfBath[is.na(test$BsmtHalfBath)] = 0
+test$MasVnrType[is.na(test$MasVnrType)] = "None"
+test$Electrical[is.na(test$Electrical)] = "None"
+test$Exterior1st[is.na(test$Exterior1st)] = "None"
+test$Exterior2nd[is.na(test$Exterior2nd)] = "None"
+test$Functional[is.na(test$Functional)] = "None"
+test$Utilities[is.na(test$Utilities)] = "None"
+
+colnames(test)[44] <- "FirstFlrSF"
+colnames(test)[45] <- "SecondFlrSF"
+```
+
+
+## Forward Fit Model and Prediction
+Kaggle Score: 0.14255
+```{r fit forward model}
+forward_train = train[,c("OverallQual","GrLivArea", "Neighborhood","BsmtFinSF1", "YearBuilt", "OverallCond", "GarageArea","GarageCars",
+                             "BsmtUnfSF","BsmtFinSF2", "MSZoning", "Fireplaces", "YearRemodAdd", "BldgType",  "logSalePrice")]
+
+#create dummy variables
+forward_train = dummy_cols(forward_train, select = c("Neighborhood", "BldgType", "MSZoning"), remove_selected_columns = T)
+
+#fit model
+forward_fit = lm(logSalePrice~., data = forward_train)
+summary(forward_fit)
+
+foward_test = test
+forward_test = dummy_cols(test, select = c("Neighborhood", "BldgType", "MSZoning"), remove_selected_columns = T)
+forward_test$CentralAir = ifelse(forward_test$CentralAir == "Y", 1,0)
+
+# Make predictions
+forward_pred = predict(forward_fit,newdata=forward_test)
+forward_pred = exp(forward_pred)
+forward_test$SalePrice = forward_pred
+
+#Write prediction into its own file
+forward_predictions = forward_test %>% dplyr::select(Id,SalePrice)
+write_csv(forward_predictions, "forwardmodel_predictions.csv")
+```
+
+
+## Backward Fit Model
+Kaggle Score: 0.14206
+```{r fit backward model}
+#select interested variables
+backward_train = train%>% select(OverallQual, OverallCond, YearBuilt, YearRemodAdd, BsmtFinSF1, BsmtFinSF2, BsmtUnfSF, GrLivArea, FullBath, HalfBath, BedroomAbvGr, TotRmsAbvGrd, Fireplaces, GarageCars, GarageArea, WoodDeckSF, OpenPorchSF, EnclosedPorch, ScreenPorch, PoolArea, YrSold, Neighborhood, MSZoning, LotShape, LotConfig, Condition1, BldgType, BsmtFinType1, HeatingQC, CentralAir, Electrical, KitchenQual, GarageType, GarageFinish, SaleType,logSalePrice)
+
+# create dummy variables
+backward_train$CentralAir = ifelse(backward_train$CentralAir == "Y", 1,0)
+backcat_var = colnames(backward_train[, sapply(backward_train, class) %in% c('character', 'factor')])
+backward_train = dummy_cols(backward_train, select = backcat_var, 
+                            remove_selected_columns = T)
+
+#fit model
+backward_fit = lm(logSalePrice~., data = backward_train)
+summary(backward_fit)
+
+backward_test = dummy_cols(test, select = backcat_var, remove_selected_columns = T)
+backward_test$CentralAir = ifelse(backward_test$CentralAir == "Y", 1,0)
+
+#create missing columns in test dataset
+backward_test$KitchenQual_Ex[is.na(backward_test$KitchenQual_Ex)] = 0
+backward_test$KitchenQual_Fa[is.na(backward_test$KitchenQual_Fa)] = 0
+backward_test$KitchenQual_Gd[is.na(backward_test$KitchenQual_Gd)] = 0
+backward_test$KitchenQual_TA[is.na(backward_test$KitchenQual_TA)] = 0
+backward_test$Electrical_Mix = 0
+backward_test$Electrical_None= 0
+
+#make prediction  
+backward_pred = predict(backward_fit,newdata=backward_test)
+backward_pred = exp(backward_pred)
+backward_test$SalePrice = backward_pred
+
+# write predictions into own file
+backward_predictions = backward_test %>% dplyr::select(Id,SalePrice)
+write_csv(backward_predictions, "backwardmodel_predictions.csv")
+```
+
+## Stepwise Fit Model
+Kaggle Score: 0.14272
+```{r fit stepwise model}
+stepwise_train = train[,c("OverallQual","GrLivArea", "Neighborhood","BsmtFinSF1", "YearBuilt", "OverallCond", "GarageArea",
+                             "BsmtUnfSF","BsmtFinSF2", "MSZoning", "Fireplaces", "YearRemodAdd", "BldgType",  "logSalePrice")]
+stepwise_train = dummy_cols(stepwise_train, select = c("Neighborhood", "BldgType", "MSZoning"), remove_selected_columns = T)
+
+#fit model
+stepwise_fit = lm(logSalePrice~., data = stepwise_train)
+summary(stepwise_fit)
+
+#create dummy variables
+stepwise_test = dummy_cols(test, select = c("Neighborhood", "BldgType", "MSZoning"), remove_selected_columns = T)
+
+# make predictions
+stepwise_pred = predict(stepwise_fit,newdata=stepwise_test)
+stepwise_pred = exp(stepwise_pred)
+stepwise_test$SalePrice = stepwise_pred
+
+# write predictions into own file
+stepwise_predictions = stepwise_test %>% dplyr::select(Id,SalePrice)
+write_csv(stepwise_predictions, "stepwisemodel_predictions.csv")
+```
+
+
+## Custom Model and Prediction
+Kaggle Score: 0.14137
+```{r stepwise prediction}
+# select interested columns
+custom_train = train%>% select(OverallQual, OverallCond, YearBuilt, YearRemodAdd, BsmtFinSF1, BsmtFinSF2, BsmtUnfSF, GrLivArea, FullBath, HalfBath, BedroomAbvGr, TotRmsAbvGrd, Fireplaces, GarageCars, GarageArea, WoodDeckSF, OpenPorchSF, EnclosedPorch, ScreenPorch, PoolArea, YrSold, Neighborhood, MSZoning, LotShape, LotConfig, Condition1, BldgType, HeatingQC, CentralAir, Electrical, KitchenQual, GarageType, GarageFinish, logSalePrice)
+
+# create dummy variables
+custom_train = dummy_cols(custom_train, select = c("Neighborhood", "BldgType", "MSZoning", "LotShape", "LotConfig", "HeatingQC", "KitchenQual"), remove_selected_columns = T)
+custom_train$CentralAir = ifelse(custom_train$CentralAir == "Y", 1,0)
+
+#fit model
+custom_fit = lm(logSalePrice~., data = custom_train)
+summary(custom_fit)
+
+# copy test dataset
+foward_test = test
+custom_test = dummy_cols(test, select = c("Neighborhood", "BldgType", "MSZoning", "LotShape", "LotConfig", "HeatingQC", "KitchenQual"), 
+                         remove_selected_columns = T)
+
+# create missing columns in test dataset
+custom_test$CentralAir = ifelse(custom_test$CentralAir == "Y", 1,0)
+#custom_test$Electrical_Mix = 0
+#custom_test$Electrical_None= 0
+custom_test$KitchenQual_Gd[is.na(custom_test$KitchenQual_Gd)] = 0
+custom_test$KitchenQual_Ex[is.na(custom_test$KitchenQual_Ex)] = 0
+custom_test$KitchenQual_Fa[is.na(custom_test$KitchenQual_Fa)] = 0
+custom_test$KitchenQual_Gd[is.na(custom_test$KitchenQual_Gd)] = 0
+custom_test$KitchenQual_TA[is.na(custom_test$KitchenQual_TA)] = 0
+
+#predict 
+custom_pred = predict(custom_fit,newdata=custom_test)
+custom_pred = exp(custom_pred)
+custom_test$SalePrice = custom_pred
+
+custom_predictions = custom_test %>% dplyr::select(Id,SalePrice)
+write_csv(custom_predictions, "custommodel_predictions.csv")
+```
