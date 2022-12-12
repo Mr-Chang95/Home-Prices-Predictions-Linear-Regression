@@ -31,7 +31,7 @@ In the end, we want to write a 7 page report discussing our findings along with 
 - Custom Model Kaggle Score: 0.14137
 
 ## RShiny app
-Please c;ick to access [RShiny App](https://x0s00e-danny-chang.shinyapps.io/Home_Price_Shiny/?_ga=2.124718090.1268003529.1670802137-241624307.1669589829)
+Please click to access [RShiny App](https://x0s00e-danny-chang.shinyapps.io/Home_Price_Shiny/?_ga=2.124718090.1268003529.1670802137-241624307.1669589829)
 
 ## Licensing and Acknowledgements
 This was done as a project for Data Science 6371 at Southern Methodist University,
