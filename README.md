@@ -1,4 +1,4 @@
-# DS 6371 - Kaggle Project(Home Sale Price Prediction)
+# Kaggle Project(Home Sale Price Prediction)
 ## By Daniel Chang & Garrett Drake
 ![DS 6371 - Kaggle Project(Home Sale Price Prediction)](https://user-images.githubusercontent.com/92649864/206943028-d76ff8e4-3774-4e0c-9e77-ea5e87522a9a.jpg)
 
